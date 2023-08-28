@@ -1,0 +1,49 @@
+# The manifest for the "celeryworker" service.
+# Read the full specification for the "Backend Service" type at:
+#  https://aws.github.io/copilot-cli/docs/manifest/backend-service/
+
+# Your service name will be used in naming your resources like log groups, ECS services, etc.
+name: celeryworker
+type: Backend Service
+
+# Your service does not allow any traffic.
+
+# Configuration for your containers and service.
+image:
+  # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/backend-service/#image-build
+  build: backend/celeryworker.dockerfile
+
+cpu: 256       # Number of CPU units for the task.
+memory: 512    # Amount of memory in MiB used by the task.
+platform: linux/x86_64     # See https://aws.github.io/copilot-cli/docs/manifest/backend-service/#platform
+count: 1       # Number of tasks that should be running in your service.
+exec: true     # Enable running commands in your container.
+
+
+variables:
+  SENTRY_DSN: ""
+  POSTGRES_DB: app
+  POSTGRES_USER: postgres
+  APP_ENV: ${COPILOT_ENVIRONMENT_NAME}
+  PROJECT_NAME: ${COPILOT_APPLICATION_NAME}
+  FIRST_SUPERUSER: "admin@${COPILOT_APPLICATION_NAME}.dev"
+  DOMAIN: ${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.dev
+  SERVER_NAME: ${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.dev
+  SERVER_HOST: "https://${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.dev"
+  QUEUE_ENDPOINT: queue.${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.local
+  
+environments:
+  dev:
+    variables:
+      POSTGRES_SERVER: "${COPILOT_APPLICATION_NAME}-${COPILOT_ENVIRONMENT_NAME}-addonsstack-17l1zd-dbdbwriterinstance-3wk9ja48tcy8.chfc4zg0x4xo.us-west-2.rds.amazonaws.com"
+    secrets:
+      SECRET_KEY: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/SECRET_KEY
+      FIRST_SUPERUSER_PASSWORD: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/FIRST_SUPERUSER_PASSWORD
+      POSTGRES_PASSWORD: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/POSTGRES_PASSWORD
+      PGADMIN_DEFAULT_PASSWORD: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/PGADMIN_DEFAULT_PASSWORD
+      DB_SECRET:
+        from_cfn: ${COPILOT_APPLICATION_NAME}-${COPILOT_ENVIRONMENT_NAME}-dbAuroraSecret
+    network:
+      vpc:
+        security_groups:
+          - from_cfn: ${COPILOT_APPLICATION_NAME}-${COPILOT_ENVIRONMENT_NAME}-dbSecurityGroup

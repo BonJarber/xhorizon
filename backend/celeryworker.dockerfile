@@ -1,6 +1,8 @@
-FROM public.ecr.aws/sam/build-python3.8:1.88.0-20230622191614
+FROM public.ecr.aws/sam/build-python3.10
 
 WORKDIR /app/
+
+RUN yum install -y libxslt-devel libxml2-devel
 
 # Install Poetry
 RUN curl -sSL https://install.python-poetry.org/ | POETRY_HOME=/opt/poetry python && \

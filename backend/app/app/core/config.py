@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    APP_ENV: str
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
@@ -81,6 +82,17 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
+
+    # AWS_ACCESS_KEY_ID: str
+    # AWS_SECRET_ACCESS_KEY: str
+
+    # I think I can get these from boto3
+    # AWS_DEFAULT_REGION: str = "us-west-2"
+    # ECS_SUBNET_ID: str
+    # ECS_SECURITY_GROUP_ID: str
+
+    # LOGGING_WEBHOOK: str
+    # DISCORD_BOT_TOKEN: str
 
     class Config:
         case_sensitive = True

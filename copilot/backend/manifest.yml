@@ -1,0 +1,67 @@
+# The manifest for the "backend" service.
+# Read the full specification for the "Backend Service" type at:
+#  https://aws.github.io/copilot-cli/docs/manifest/backend-service/
+
+# Your service name will be used in naming your resources like log groups, ECS services, etc.
+name: backend
+type: Backend Service
+
+# Your service does not allow any traffic.
+
+# Configuration for your containers and service.
+image:
+  # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/backend-service/#image-build
+  build: backend/backend.dockerfile
+
+cpu: 256       # Number of CPU units for the task.
+memory: 512    # Amount of memory in MiB used by the task.
+platform: linux/x86_64     # See https://aws.github.io/copilot-cli/docs/manifest/backend-service/#platform
+count: 1       # Number of tasks that should be running in your service.
+exec: true     # Enable running commands in your container.
+
+variables:
+  PROJECT_NAME: ${COPILOT_APPLICATION_NAME}
+  SENTRY_DSN: ""
+  FIRST_SUPERUSER: "admin@${COPILOT_APPLICATION_NAME}.dev"
+  POSTGRES_USER: postgres
+  DOMAIN: ${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.dev
+  SERVER_NAME: ${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.dev
+  SERVER_HOST: "https://${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.dev"
+  QUEUE_ENDPOINT: queue.${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.${COPILOT_APPLICATION_NAME}.dev
+  POSTGRES_DB: app
+
+
+environments:
+  dev:
+    variables:
+      APP_ENV: dev
+      POSTGRES_SERVER: "${COPILOT_APPLICATION_NAME}-${COPILOT_ENVIRONMENT_NAME}-addonsstack-17l1zd-dbdbwriterinstance-3wk9ja48tcy8.chfc4zg0x4xo.us-west-2.rds.amazonaws.com"
+    secrets:
+      SECRET_KEY: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/SECRET_KEY
+      FIRST_SUPERUSER_PASSWORD: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/FIRST_SUPERUSER_PASSWORD
+      POSTGRES_PASSWORD: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/POSTGRES_PASSWORD
+      PGADMIN_DEFAULT_PASSWORD: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/PGADMIN_DEFAULT_PASSWORD
+      DB_SECRET:
+        from_cfn: ${COPILOT_APPLICATION_NAME}-${COPILOT_ENVIRONMENT_NAME}-dbAuroraSecret
+    network:
+      vpc:
+        security_groups:
+          - from_cfn: ${COPILOT_APPLICATION_NAME}-${COPILOT_ENVIRONMENT_NAME}-dbSecurityGroup
+
+# storage:
+  # readonly_fs: true       # Limit to read-only access to mounted root filesystems.
+
+# Optional fields for more advanced use-cases.
+#
+#variables:                    # Pass environment variables as key value pairs.
+#  LOG_LEVEL: info
+
+#secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
+#  GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of the SSM parameter.
+
+# You can override any of the values defined above by environment.
+#environments:
+#  test:
+#    count: 2               # Number of tasks to run for the "test" environment.
+#    deployment:            # The deployment strategy for the "test" environment.
+#       rolling: 'recreate' # Stops existing tasks before new ones are started for faster deployments.
